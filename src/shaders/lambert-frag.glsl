@@ -36,26 +36,25 @@ int shiftright(int x, int n) {
 }
 
 void main() {
-    if (true) {
+    if(u_Shader == 0) {
     // Material base color (before shading)
-    vec4 diffuseColor = vec4(0.42, 0.2, 0.14, 1);
+        vec4 diffuseColor = u_Color;
 
         // Calculate the diffuse term for Lambert shading
-    float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(fs_LightVec.xyz));
+        float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(fs_LightVec.xyz));
         // Avoid negative lighting values
-    diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);
+        diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);
 
-    float ambientTerm = 0.2;
+        float ambientTerm = 0.2;
 
-    float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
+        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
 
         // Compute final shaded color
-    out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
     //out_Col = vec4((normalize(fs_Nor.xyz) + vec3(1.)) * 0.5, 1.);
-    }
-    if (false) { // one-dimensional texture shading
+    } else if(u_Shader == 1) { // one-dimensional texture shading
         float nl = dot(vec3(fs_Nor), vec3(fs_LightVec));
         if(nl > 0.5) {
             out_Col = vec4(1.0, 1.0, 1.0, 1.0);
@@ -64,5 +63,7 @@ void main() {
         } else {
             out_Col = vec4(0.0, 0.0, 0.0, 1.0);
         }
+    } else {
+        out_Col = vec4(normalize(fs_Nor.xyz), 1.0);
     }
 }

@@ -16,9 +16,12 @@ const controls = {
   shader: 6,
   "Reload Scene": loadScene, // A function pointer, essentially
 };
-
+var palette = {
+  main_color: [255 * 0.42, 255 * 0.2, 255 * 0.14, 255],
+};
 let shader = -1;
-let prevTesselations: number = 6;
+let prevColor: vec4 = vec4.fromValues(1.0, 0.0, 0.0, 0.0);
+let prevShader: number = -1;
 let suzanne: Mesh = new Mesh(suzanne_str, vec3.fromValues(0, 0, 0));
 
 let prevTime: number = 0;
@@ -40,9 +43,11 @@ function main() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, "shader", {
-    lambert: -1,
-    one_dimensional_toon: 0,
+    normals: -1,
+    lambert: 0,
+    one_dimensional_toon: 1,
   });
+  gui.addColor(palette, "main_color");
   gui.add(controls, "Reload Scene");
 
   // get canvas and webgl context
@@ -76,13 +81,19 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
 
-    if (controls.shader != prevTesselations) {
-      prevTesselations = controls.shader;
+    if (controls.shader != prevShader) {
+      prevShader = controls.shader;
+    }
+    
+    let currColor : vec4 = vec4.fromValues(palette.main_color[0]/255, palette.main_color[1]/255, palette.main_color[2] / 255.0, 1);
+    if(currColor != prevColor)
+    {
+      prevColor = currColor;
     }
 
     lambert.draw(suzanne);
 
-    renderer.render(camera, lambert, shader, [suzanne]);
+    renderer.render(camera, lambert, controls.shader, currColor, [suzanne]);
 
     prevTime++;
     stats.end();

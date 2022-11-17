@@ -43,7 +43,6 @@ class Mesh extends Drawable {
 
     this.indices = new Uint32Array(idxTemp);
     this.normals = new Float32Array(norTemp);
-    console.log("NORMALS: ", this.normals);
     this.positions = new Float32Array(posTemp);
     this.uvs = new Float32Array(uvsTemp);
 
