@@ -1,4 +1,4 @@
-
+export var PI: number = 3.1415926535;
 export var gl: WebGL2RenderingContext;
 export function setGL(_gl: WebGL2RenderingContext) {
   gl = _gl;
