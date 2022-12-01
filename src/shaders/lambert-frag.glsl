@@ -13,6 +13,8 @@ precision highp float;
 
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
 uniform int u_Shader;
+uniform vec4 u_CameraEye;
+uniform sampler2D u_Texture;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
@@ -57,12 +59,26 @@ void main() {
     } else if(u_Shader == 1) { // one-dimensional texture shading
         float nl = dot(vec3(fs_Nor), vec3(fs_LightVec));
         if(nl > 0.5) {
-            out_Col = vec4(1.0, 1.0, 1.0, 1.0);
+            out_Col = vec4(1.45 * u_Color.xyz, 1.0);
         } else if(nl > 0.0) {
-            out_Col = vec4(0.33, 0.33, 0.33, 1.0);
+            out_Col = u_Color;
         } else {
-            out_Col = vec4(0.0, 0.0, 0.0, 1.0);
+            out_Col = vec4(0.35 * u_Color.xyz, 1.0);
         }
+    } else if(u_Shader == 2) { // shininess-based highlights
+        vec3 n = normalize(fs_Nor.xyz);
+        vec3 v = normalize(u_CameraEye.xyz);
+        vec3 l = normalize(fs_LightVec.xyz);
+        vec3 r = l - 2.0 * dot(l, n) * n;
+        float s = 0.5;
+        float D = pow(abs(dot(v, r)), s);
+        float nl = dot(n, l);
+        out_Col = vec4(nl, D, 0.5, 1.0); // replace with texture sample
+
+    } else if(u_Shader == 3) {
+        mediump vec2 coord = vec2(gl_FragCoord.x / 512.0, 1.0 - (gl_FragCoord.y / 512.0));
+        mediump vec4 samp = texture(u_Texture, coord);
+        out_Col = vec4(samp.b, samp.r, samp.g, 1.0);
     } else {
         out_Col = vec4(normalize(fs_Nor.xyz), 1.0);
     }

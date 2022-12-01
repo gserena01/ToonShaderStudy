@@ -1,6 +1,6 @@
-import {vec3, vec4, mat4} from 'gl-matrix';
-import Drawable from './Drawable';
-import {gl} from '../../globals';
+import { vec3, vec4, mat4 } from "gl-matrix";
+import Drawable from "./Drawable";
+import { gl } from "../../globals";
 
 var activeProgram: WebGLProgram = null;
 
@@ -16,7 +16,7 @@ export class Shader {
       throw gl.getShaderInfoLog(this.shader);
     }
   }
-};
+}
 
 class ShaderProgram {
   prog: WebGLProgram;
@@ -32,6 +32,8 @@ class ShaderProgram {
   unifColor: WebGLUniformLocation;
   unifShader: WebGLUniformLocation;
   unifLightPos: WebGLUniformLocation;
+  unifTexture: WebGLUniformLocation;
+  unifTexture1: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -47,14 +49,15 @@ class ShaderProgram {
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
-    this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
+    this.unifModel = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
-    this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
-    this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
-    this.unifShader     = gl.getUniformLocation(this.prog, "u_Shader");
-    this.unifCameraEye  = gl.getUniformLocation(this.prog, "u_CameraEye");
-    this.unifLightPos   = gl.getUniformLocation(this.prog, "u_LightPos");
-
+    this.unifViewProj = gl.getUniformLocation(this.prog, "u_ViewProj");
+    this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifShader = gl.getUniformLocation(this.prog, "u_Shader");
+    this.unifCameraEye = gl.getUniformLocation(this.prog, "u_CameraEye");
+    this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
+    this.unifTexture = gl.getUniformLocation(this.prog, "u_Texture");
+    this.unifTexture1 = gl.getUniformLocation(this.prog, "u_Texture1");
   }
 
   use() {
@@ -113,6 +116,22 @@ class ShaderProgram {
     }
   }
 
+  setTexture(texture: any) {
+    this.use();
+    if ((this, this.unifTexture !== -1)) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.uniform1i(this.unifTexture, 0);
+    }
+  }
+
+  setTexture1(textureNum: number) {
+    this.use();
+    if (this.unifTexture1 !== -1) {
+      gl.uniform1i(this.unifTexture1, 1);
+    }
+  }
+
   draw(d: Drawable) {
     this.use();
 
@@ -132,6 +151,6 @@ class ShaderProgram {
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);
     if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
   }
-};
+}
 
 export default ShaderProgram;
