@@ -1,4 +1,4 @@
-import {gl} from '../../globals';
+import { gl } from "../../globals";
 
 abstract class Drawable {
   count: number = 0;
@@ -6,53 +6,158 @@ abstract class Drawable {
   bufIdx: WebGLBuffer;
   bufPos: WebGLBuffer;
   bufNor: WebGLBuffer;
+  bufTranslate: WebGLBuffer;
+  bufCol: WebGLBuffer;
+  bufUV: WebGLBuffer;
+  bufTransform1: WebGLBuffer;
+  bufTransform2: WebGLBuffer;
+  bufTransform3: WebGLBuffer;
+  bufTransform4: WebGLBuffer;
 
-  idxBound: boolean = false;
-  posBound: boolean = false;
-  norBound: boolean = false;
+  idxGenerated: boolean = false;
+  posGenerated: boolean = false;
+  norGenerated: boolean = false;
+  colGenerated: boolean = false;
+  translateGenerated: boolean = false;
+  uvGenerated: boolean = false;
+  transform1Generated: boolean = false;
+  transform2Generated: boolean = false;
+  transform3Generated: boolean = false;
+  transform4Generated: boolean = false;
 
-  abstract create() : void;
+  numInstances: number = 0; // How many instances of this Drawable the shader program should draw
 
-  destory() {
+  abstract create(): void;
+
+  destroy() {
     gl.deleteBuffer(this.bufIdx);
     gl.deleteBuffer(this.bufPos);
     gl.deleteBuffer(this.bufNor);
+    gl.deleteBuffer(this.bufCol);
+    gl.deleteBuffer(this.bufTranslate);
+    gl.deleteBuffer(this.bufUV);
+    gl.deleteBuffer(this.bufTransform1);
+    gl.deleteBuffer(this.bufTransform2);
+    gl.deleteBuffer(this.bufTransform3);
+    gl.deleteBuffer(this.bufTransform4);
   }
 
   generateIdx() {
-    this.idxBound = true;
+    this.idxGenerated = true;
     this.bufIdx = gl.createBuffer();
   }
 
   generatePos() {
-    this.posBound = true;
+    this.posGenerated = true;
     this.bufPos = gl.createBuffer();
   }
 
   generateNor() {
-    this.norBound = true;
+    this.norGenerated = true;
     this.bufNor = gl.createBuffer();
   }
 
+  generateCol() {
+    this.colGenerated = true;
+    this.bufCol = gl.createBuffer();
+  }
+
+  generateTranslate() {
+    this.translateGenerated = true;
+    this.bufTranslate = gl.createBuffer();
+  }
+
+  generateUV() {
+    this.uvGenerated = true;
+    this.bufUV = gl.createBuffer();
+  }
+
+  generateTransform1() {
+    this.transform1Generated = true;
+    this.bufTransform1 = gl.createBuffer();
+  }
+
+  generateTransform2() {
+    this.transform2Generated = true;
+    this.bufTransform2 = gl.createBuffer();
+  }
+  generateTransform3() {
+    this.transform3Generated = true;
+    this.bufTransform3 = gl.createBuffer();
+  }
+  generateTransform4() {
+    this.transform4Generated = true;
+    this.bufTransform4 = gl.createBuffer();
+  }
+
   bindIdx(): boolean {
-    if (this.idxBound) {
+    if (this.idxGenerated) {
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
     }
-    return this.idxBound;
+    return this.idxGenerated;
   }
 
   bindPos(): boolean {
-    if (this.posBound) {
+    if (this.posGenerated) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufPos);
     }
-    return this.posBound;
+    return this.posGenerated;
   }
 
   bindNor(): boolean {
-    if (this.norBound) {
+    if (this.norGenerated) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufNor);
     }
-    return this.norBound;
+    return this.norGenerated;
+  }
+
+  bindCol(): boolean {
+    if (this.colGenerated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol);
+    }
+    return this.colGenerated;
+  }
+
+  bindTranslate(): boolean {
+    if (this.translateGenerated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTranslate);
+    }
+    return this.translateGenerated;
+  }
+
+  bindUV(): boolean {
+    if (this.uvGenerated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufUV);
+    }
+    return this.uvGenerated;
+  }
+
+  bindTrans1(): boolean {
+    if (this.transform1Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTransform1);
+    }
+    return this.transform1Generated;
+  }
+
+  bindTrans2(): boolean {
+    if (this.transform2Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTransform2);
+    }
+    return this.transform2Generated;
+  }
+
+  bindTrans3(): boolean {
+    if (this.transform3Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTransform3);
+    }
+    return this.transform3Generated;
+  }
+
+  bindTrans4(): boolean {
+    if (this.transform4Generated) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufTransform4);
+    }
+    return this.transform4Generated;
   }
 
   elemCount(): number {
@@ -62,6 +167,10 @@ abstract class Drawable {
   drawMode(): GLenum {
     return gl.TRIANGLES;
   }
-};
+
+  setNumInstances(num: number) {
+    this.numInstances = num;
+  }
+}
 
 export default Drawable;

@@ -31,7 +31,7 @@ class OpenGLRenderer {
     mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
     prog.setModelMatrix(model);
     prog.setViewProjMatrix(viewProj);
-    prog.setCameraEye([camera.getEye()[0], camera.getEye()[1], camera.getEye()[2], 1.0]);
+    prog.setCameraEye(vec4.fromValues(camera.getEye()[0], camera.getEye()[1], camera.getEye()[2], 1.0));
     prog.setShader(shader);
     prog.setGeometryColor(main_color);
     prog.setLightPos(light_pos);
