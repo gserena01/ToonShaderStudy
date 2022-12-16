@@ -18,7 +18,7 @@ const controls = {
   r: 2.5,
   magnitude: 0.5,
   z_min: 8.0,
-  shift_num: 2,
+  delete_num: 4,
   mesh: 0,
   light_rotation: 0,
   "Reload Scene": loadScene, // A function pointer, essentially
@@ -40,6 +40,10 @@ let suzanne: Mesh = new Mesh(
 );
 let renderMesh: Mesh = suzanne;
 let screenQuad: ScreenQuad;
+
+function isMappingShader() {
+  return controls.shader == 2 || controls.shader == 3 || controls.shader == 7 || controls.shader == 8 || controls.shader == 9;
+}
 
 function loadScene() {
   renderMesh.create();
@@ -68,22 +72,23 @@ function main() {
     detail_mapping: 7,
     near_silhouette_1: 8,
     near_silhouette_2: 9,
-    bit_shifting: 10,
+    bit_deletion: 10,
     outlines: 4,
     mesh_lines: 5,
+    cluster_dot: 11,
     obra_dinn: 6,
   });
   let color_folder = gui.addFolder("Color");
   color_folder.addColor(palette, "main_color");
   let shininess_folder = gui.addFolder("Shininess");
-  shininess_folder.add(controls, "shininess", 0, 1).step(.01);
+  shininess_folder.add(controls, "shininess", 0, 1).step(0.01);
   let detail_folder = gui.addFolder("Detail Mapping");
   detail_folder.add(controls, "r", 1.0, 10.0).step(0.01);
   detail_folder.add(controls, "z_min", 0.0, 10.0).step(0.01);
   let silhouette_folder = gui.addFolder("Near-Silhouette");
   silhouette_folder.add(controls, "magnitude", 0, 5).step(0.01);
-  let shifting_folder = gui.addFolder("Bit-Shifting");
-  shifting_folder.add(controls, "shift_num", 0, 8).step(1);
+  let bit_folder = gui.addFolder("Bit Deletion");
+  bit_folder.add(controls, "delete_num", 0, 8).step(1);
   gui.add(controls, "mesh", {
     monkey: 0,
     t_rex: 1,
@@ -133,6 +138,11 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require("./shaders/lambert-frag.glsl")),
   ]);
 
+  const mappingShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require("./shaders/lambert-vert.glsl")),
+    new Shader(gl.FRAGMENT_SHADER, require("./shaders/mappings-frag.glsl")),
+  ]);
+
   const postShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require("./shaders/post/noOp-vert.glsl")),
     new Shader(
@@ -154,7 +164,7 @@ function main() {
       prevShader = controls.shader;
     }
 
-    if (controls.shader == 2 || controls.shader == 3 || controls.shader == 7 || controls.shader == 8 || controls.shader == 9) {
+    if (isMappingShader()) {
       const img = new Image();
       img.onload = function () {
         gl.activeTexture(gl.TEXTURE2);
@@ -163,7 +173,7 @@ function main() {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
         gl.generateMipmap(gl.TEXTURE_2D);
 
-        const texLoc = gl.getUniformLocation(lambert.prog, "u_SamplerTexture");
+        const texLoc = gl.getUniformLocation(mappingShader.prog, "u_SamplerTexture");
         gl.uniform1i(texLoc, 2);
 
         gl.drawArrays(gl.TRIANGLE_FAN, 0, 4); // draw over the entire viewport
@@ -172,44 +182,51 @@ function main() {
         img.src = "/resources/texture2.png";
         shininess_folder.open();
         detail_folder.close();
-        silhouette_folder.close()
-        lambert.setShininess(controls.shininess);
+        silhouette_folder.close();
+        mappingShader.setShininess(controls.shininess);
       } else if (controls.shader == 3) {
         img.src = "/resources/texture3.png";
         shininess_folder.open();
         detail_folder.close();
-        silhouette_folder.close()
-        lambert.setShininess(controls.shininess);
+        silhouette_folder.close();
+        mappingShader.setShininess(controls.shininess);
       } else if (controls.shader == 7) {
         img.src = "/resources/texture4.png";
-        lambert.setR(controls.r);
-        lambert.setZMin(controls.z_min);
+        mappingShader.setR(controls.r);
+        mappingShader.setZMin(controls.z_min);
         detail_folder.open();
         shininess_folder.close();
-        silhouette_folder.close()
+        silhouette_folder.close();
       } else if (controls.shader == 8) {
         img.src = "/resources/texture5.png";
         detail_folder.close();
         shininess_folder.close();
         silhouette_folder.open();
-        lambert.setR(controls.magnitude);
+        mappingShader.setR(controls.magnitude);
       } else if (controls.shader == 9) {
         img.src = "/resources/texture6.png";
         detail_folder.close();
         shininess_folder.close();
         silhouette_folder.open();
-        lambert.setR(controls.magnitude);
+        mappingShader.setR(controls.magnitude);
       }
     } else {
       shininess_folder.close();
       detail_folder.close();
-      silhouette_folder.close()
+      silhouette_folder.close();
     }
 
-    if (controls.shader == 0 || controls.shader == 1) {
+    if (controls.shader == 0 || controls.shader == 1 || controls.shader == 11) {
       color_folder.open();
     } else {
       color_folder.close();
+    }
+
+    if (controls.shader == 10) {
+      bit_folder.open();
+      lambert.setShift(controls.delete_num);
+    } else {
+      bit_folder.close();
     }
 
     if (controls.mesh != prevMesh) {
@@ -269,18 +286,17 @@ function main() {
       prevLightAngle = controls.light_rotation;
     }
 
-    if (controls.shader == 4 || controls.shader == 5 || controls.shader == 6) {
+    if (
+      controls.shader == 4 ||
+      controls.shader == 5 ||
+      controls.shader == 6 ||
+      controls.shader == 11
+    ) {
       // post-processing, adapted from: https://learnopengl.com/Advanced-OpenGL/Framebuffers
 
-      //1. Render the scene as usual with the new framebuffer bound as the active framebuffer.
+      // 1. Render the scene as usual with the new framebuffer bound as the active framebuffer.
       // first pass
       frameBuffer.bindFrameBuffer();
-      gl.viewport(
-        0,
-        0,
-        window.innerWidth * window.devicePixelRatio,
-        window.innerHeight * window.devicePixelRatio
-      );
       gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
       gl.enable(gl.DEPTH_TEST);
@@ -289,19 +305,13 @@ function main() {
       ]);
       // nothing should appear bc we are rendering to the buffer
 
-      //2. Bind to the default framebuffer.
+      // 2. Bind to the default framebuffer.
       // second pass
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); // back to default
-      gl.viewport(
-        0,
-        0,
-        window.innerWidth * window.devicePixelRatio,
-        window.innerHeight * window.devicePixelRatio
-      );
       gl.clearColor(0.1, 0.1, 0.1, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
 
-      //3. Draw a quad that spans the entire screen with the new framebuffer's color buffer as its texture.
+      // 3. Draw a quad that spans the entire screen with the new framebuffer's color buffer as its texture.
       gl.disable(gl.DEPTH_TEST);
       frameBuffer.bindToTextureSlot(1);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -316,12 +326,20 @@ function main() {
       );
     } else {
       // render without post-processing effects
-      // render without post-processing effects
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.enable(gl.DEPTH_TEST);
-      renderer.render(camera, lambert, controls.shader, currColor, lightPos4, [
-        renderMesh,
-      ]);
+      if (isMappingShader()) {
+        renderer.render(camera, mappingShader, controls.shader, currColor, lightPos4, [renderMesh]);
+      } else {
+        renderer.render(
+          camera,
+          lambert,
+          controls.shader,
+          currColor,
+          lightPos4,
+          [renderMesh]
+        );
+      }
     }
 
     stats.end();

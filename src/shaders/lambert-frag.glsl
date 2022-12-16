@@ -15,7 +15,6 @@ uniform vec4 u_Color; // The color with which to render this instance of geometr
 uniform int u_Shader;
 uniform vec4 u_CameraEye;
 uniform vec4 u_LightPos;
-uniform sampler2D u_Texture;
 uniform sampler2D u_SamplerTexture;
 uniform float u_Shininess;
 uniform float u_R;
@@ -37,7 +36,7 @@ void main() {
     vec3 l = normalize(u_LightPos.xyz);
     float nl = dot(n, l);
     vec3 v = normalize(u_CameraEye.xyz);
-    if(u_Shader == 0) {
+    if(u_Shader == 0 || u_Shader == 11) {
     // Material base color (before shading)
         vec4 diffuseColor = u_Color;
 
@@ -62,25 +61,8 @@ void main() {
         } else {
             out_Col = vec4(0.35 * u_Color.xyz, 1.0);
         }
-    } else if(u_Shader == 2 || u_Shader == 3) { // shininess-based highlights
-        vec3 r = l - 2.0 * dot(l, n) * n;
-        float s = u_Shininess;
-        float D = pow(abs(dot(v, r)), s);
-        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)).rgb, 1.0); // replace with texture sample
-
     } else if(u_Shader == 4) { // white silhouette
         out_Col = vec4(1.0);
-    } else if(u_Shader == 7) { // detail mapping
-        float z = distance(u_CameraEye, fs_Pos);
-        float zmin = u_ZMin;
-        float r = u_R;
-        float zmax = r * zmin;
-        float D = 1.0 - (log(z / zmin) / log(zmax / zmin));
-        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)));
-    } else if(u_Shader == 8 || u_Shader == 9) { // near-silhouette
-        float r = u_R;
-        float D = pow(abs(dot(n, v)), r);
-        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)));
     } else if(u_Shader == 10) { // bit shifting
         // lambertian shading
         vec4 diffuseColor = u_Color;
@@ -92,7 +74,7 @@ void main() {
 
         // perform bit shifting
         float factor = 255.0;
-        int shift_num = 240;
+        int shift_num = 256 - int(pow(2.0, float(u_Shift)));
         lambert_color.r = float(int(lambert_color.r * factor) & shift_num) / factor;
         lambert_color.g = float(int(lambert_color.g * factor) & shift_num) / factor;
         lambert_color.b = float(int(lambert_color.b * factor) & shift_num) / factor;

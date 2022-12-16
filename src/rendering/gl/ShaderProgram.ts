@@ -33,7 +33,6 @@ class ShaderProgram {
   unifColor: WebGLUniformLocation;
   unifShader: WebGLUniformLocation;
   unifLightPos: WebGLUniformLocation;
-  unifTexture: WebGLUniformLocation;
   unifTexture1: WebGLUniformLocation;
   unifWindowSize: WebGLUniformLocation;
   unifShininess: WebGLUniformLocation;
@@ -64,7 +63,6 @@ class ShaderProgram {
     this.unifShader = gl.getUniformLocation(this.prog, "u_Shader");
     this.unifCameraEye = gl.getUniformLocation(this.prog, "u_CameraEye");
     this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
-    this.unifTexture = gl.getUniformLocation(this.prog, "u_Texture");
     this.unifTexture1 = gl.getUniformLocation(this.prog, "u_Texture1");
     this.unifWindowSize = gl.getUniformLocation(this.prog, "u_WindowSize");
     this.unifShininess = gl.getUniformLocation(this.prog, "u_Shininess");
