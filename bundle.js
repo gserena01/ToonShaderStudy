@@ -6092,6 +6092,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
     shader: 0,
+    shininess: 0.5,
+    r: 2.5,
+    magnitude: 0.5,
+    z_min: 8.0,
+    shift_num: 2,
     mesh: 0,
     light_rotation: 0,
     "Reload Scene": loadScene,
@@ -6099,7 +6104,7 @@ const controls = {
 var palette = {
     main_color: [255 * 0.42, 255 * 0.2, 255 * 0.14, 255],
 };
-let clearColor = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(.08, .03, .24, 1);
+let clearColor = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0.08, 0.03, 0.24, 1);
 let lightPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 5);
 let lightPos4 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 0, 5, 1);
 let prevLightAngle = 0;
@@ -6107,10 +6112,8 @@ let prevColor = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValu
 let prevShader = -1;
 let prevMesh = 0;
 let suzanne = new __WEBPACK_IMPORTED_MODULE_8__geometry_Mesh__["a" /* default */](Object(__WEBPACK_IMPORTED_MODULE_9__src_globals__["c" /* readTextFile */])("resources/suzanne.obj"), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
-let tyra = new __WEBPACK_IMPORTED_MODULE_8__geometry_Mesh__["a" /* default */](Object(__WEBPACK_IMPORTED_MODULE_9__src_globals__["c" /* readTextFile */])("resources/tyra.obj"), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(1, 1, 1));
 let renderMesh = suzanne;
 let screenQuad;
-const camera = new __WEBPACK_IMPORTED_MODULE_5__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(30, 10, 30), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(100, 0, 100));
 function loadScene() {
     renderMesh.create();
     screenQuad = new __WEBPACK_IMPORTED_MODULE_3__geometry_ScreenQuad__["a" /* default */]();
@@ -6130,19 +6133,33 @@ function main() {
         normals: -1,
         lambert: 0,
         one_dimensional_toon: 1,
-        shininess_highlights: 2,
-        texture_test: 3,
+        shiny_spec_highlights1: 2,
+        shiny_spec_highlights2: 3,
+        detail_mapping: 7,
+        near_silhouette_1: 8,
+        near_silhouette_2: 9,
+        bit_shifting: 10,
         outlines: 4,
         mesh_lines: 5,
-        obra_dinn: 6
+        obra_dinn: 6,
     });
+    let color_folder = gui.addFolder("Color");
+    color_folder.addColor(palette, "main_color");
+    let shininess_folder = gui.addFolder("Shininess");
+    shininess_folder.add(controls, "shininess", 0, 1).step(.01);
+    let detail_folder = gui.addFolder("Detail Mapping");
+    detail_folder.add(controls, "r", 1.0, 10.0).step(0.01);
+    detail_folder.add(controls, "z_min", 0.0, 10.0).step(0.01);
+    let silhouette_folder = gui.addFolder("Near-Silhouette");
+    silhouette_folder.add(controls, "magnitude", 0, 5).step(0.01);
+    let shifting_folder = gui.addFolder("Bit-Shifting");
+    shifting_folder.add(controls, "shift_num", 0, 8).step(1);
     gui.add(controls, "mesh", {
         monkey: 0,
         t_rex: 1,
         armadillo: 2,
-        bunny: 3
+        bunny: 3,
     });
-    gui.addColor(palette, "main_color");
     gui.add(controls, "light_rotation", 0, 360).step(1);
     gui.add(controls, "Reload Scene");
     // get canvas and webgl context
@@ -6175,22 +6192,6 @@ function main() {
         new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(74)),
     ]);
     postShader.setWindowSize(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec2 */].fromValues(texWidth, texHeight));
-    if (true) {
-        // THIS STUFF WAS NOT TRANSFERRED YET
-        const img = new Image();
-        img.onload = function () {
-            gl.activeTexture(gl.TEXTURE2);
-            const tex = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, tex);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
-            gl.generateMipmap(gl.TEXTURE_2D);
-            const texLoc = gl.getUniformLocation(lambert.prog, "u_SamplerTexture");
-            gl.uniform1i(texLoc, 2);
-            gl.drawArrays(gl.TRIANGLE_FAN, 0, 4); // draw over the entire viewport
-        };
-        img.src = img.src = '/resources/texture1.png';
-        // ALL OF THAT STUFF ^^^^
-    }
     // This function will be called every frame
     function tick() {
         camera.update();
@@ -6199,6 +6200,66 @@ function main() {
         renderer.clear();
         if (controls.shader != prevShader) {
             prevShader = controls.shader;
+        }
+        if (controls.shader == 2 || controls.shader == 3 || controls.shader == 7 || controls.shader == 8 || controls.shader == 9) {
+            const img = new Image();
+            img.onload = function () {
+                gl.activeTexture(gl.TEXTURE2);
+                const tex = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, tex);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+                gl.generateMipmap(gl.TEXTURE_2D);
+                const texLoc = gl.getUniformLocation(lambert.prog, "u_SamplerTexture");
+                gl.uniform1i(texLoc, 2);
+                gl.drawArrays(gl.TRIANGLE_FAN, 0, 4); // draw over the entire viewport
+            };
+            if (controls.shader == 2) {
+                img.src = "/resources/texture2.png";
+                shininess_folder.open();
+                detail_folder.close();
+                silhouette_folder.close();
+                lambert.setShininess(controls.shininess);
+            }
+            else if (controls.shader == 3) {
+                img.src = "/resources/texture3.png";
+                shininess_folder.open();
+                detail_folder.close();
+                silhouette_folder.close();
+                lambert.setShininess(controls.shininess);
+            }
+            else if (controls.shader == 7) {
+                img.src = "/resources/texture4.png";
+                lambert.setR(controls.r);
+                lambert.setZMin(controls.z_min);
+                detail_folder.open();
+                shininess_folder.close();
+                silhouette_folder.close();
+            }
+            else if (controls.shader == 8) {
+                img.src = "/resources/texture5.png";
+                detail_folder.close();
+                shininess_folder.close();
+                silhouette_folder.open();
+                lambert.setR(controls.magnitude);
+            }
+            else if (controls.shader == 9) {
+                img.src = "/resources/texture6.png";
+                detail_folder.close();
+                shininess_folder.close();
+                silhouette_folder.open();
+                lambert.setR(controls.magnitude);
+            }
+        }
+        else {
+            shininess_folder.close();
+            detail_folder.close();
+            silhouette_folder.close();
+        }
+        if (controls.shader == 0 || controls.shader == 1) {
+            color_folder.open();
+        }
+        else {
+            color_folder.close();
         }
         if (controls.mesh != prevMesh) {
             prevMesh = controls.mesh;
@@ -16521,6 +16582,10 @@ class ShaderProgram {
         this.unifTexture = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_Texture");
         this.unifTexture1 = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_Texture1");
         this.unifWindowSize = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_WindowSize");
+        this.unifShininess = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_Shininess");
+        this.unifZMin = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_ZMin");
+        this.unifR = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_R");
+        this.unifShift = __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].getUniformLocation(this.prog, "u_Shift");
     }
     use() {
         if (activeProgram !== this.prog) {
@@ -16580,6 +16645,30 @@ class ShaderProgram {
         this.use();
         if (this.unifWindowSize !== -1) {
             __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].uniform2fv(this.unifWindowSize, dims);
+        }
+    }
+    setShininess(shininess) {
+        this.use();
+        if (this.unifShininess !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].uniform1f(this.unifShininess, shininess);
+        }
+    }
+    setZMin(z_min) {
+        this.use();
+        if (this.unifZMin !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].uniform1f(this.unifZMin, z_min);
+        }
+    }
+    setR(r) {
+        this.use();
+        if (this.unifR !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].uniform1f(this.unifR, r);
+        }
+    }
+    setShift(num) {
+        this.use();
+        if (this.unifShift !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["b" /* gl */].uniform1i(this.unifShift, num);
         }
     }
     draw(d) {
@@ -16756,13 +16845,13 @@ class FrameBuffer {
 /* 71 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\n\n//This is a vertex shader. While it is called a \"shader\" due to outdated conventions, this file\n//is used to apply matrix transformations to the arrays of vertex data passed to it.\n//Since this code is run on your GPU, each vertex is transformed simultaneously.\n//If it were run on your CPU, each vertex would have to be processed in a FOR loop, one at a time.\n//This simultaneous transformation allows your program to run much faster, especially when rendering\n//geometry with millions of vertices.\n\nuniform mat4 u_Model;       // The matrix that defines the transformation of the\n                            // object we're rendering. In this assignment,\n                            // this will be the result of traversing your scene graph.\n\nuniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.\n                            // This allows us to transform the object's normals properly\n                            // if the object has been non-uniformly scaled.\n\nuniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.\n                            // We've written a static matrix for you to use for HW2,\n                            // but in HW3 you'll have to generate one yourself\nuniform vec4 u_CameraEye;\nuniform vec4 u_LightPos;\n\nin vec4 vs_Pos;             // The array of vertex positions passed to the shader\n\nin vec4 vs_Nor;             // The array of vertex normals passed to the shader\n\nin vec4 vs_Col;             // The array of vertex colors passed to the shader.\n\nout vec4 fs_Pos;\nout vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.\nout vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.\nout vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.\n\nconst vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of\n                                        //the geometry in the fragment shader.\n\nvoid main()\n{\n    fs_Pos = vs_Pos;\n    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation\n\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.\n                                                            // Transform the geometry's normals by the inverse transpose of the\n                                                            // model matrix. This is necessary to ensure the normals remain\n                                                            // perpendicular to the surface after the surface is transformed by\n                                                            // the model matrix.\n                                                            \n    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below\n\n    fs_LightVec = u_LightPos - modelposition;  // Compute the direction in which the light source lies\n\n    gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is\n                                             // used to render the final positions of the geometry's vertices\n}\n"
+module.exports = "#version 300 es\n\n//This is a vertex shader. While it is called a \"shader\" due to outdated conventions, this file\n//is used to apply matrix transformations to the arrays of vertex data passed to it.\n//Since this code is run on your GPU, each vertex is transformed simultaneously.\n//If it were run on your CPU, each vertex would have to be processed in a FOR loop, one at a time.\n//This simultaneous transformation allows your program to run much faster, especially when rendering\n//geometry with millions of vertices.\n\nuniform mat4 u_Model;       // The matrix that defines the transformation of the\n                            // object we're rendering. In this assignment,\n                            // this will be the result of traversing your scene graph.\n\nuniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.\n                            // This allows us to transform the object's normals properly\n                            // if the object has been non-uniformly scaled.\n\nuniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.\n                            // We've written a static matrix for you to use for HW2,\n                            // but in HW3 you'll have to generate one yourself\nuniform vec4 u_CameraEye;\nuniform vec4 u_LightPos;\n\nin vec4 vs_Pos;             // The array of vertex positions passed to the shader\n\nin vec4 vs_Nor;             // The array of vertex normals passed to the shader\n\nin vec4 vs_Col;             // The array of vertex colors passed to the shader.\n\nout vec4 fs_Pos;\nout vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.\nout vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.\nout vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.\n\nconst vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of\n                                        //the geometry in the fragment shader.\n\nvoid main()\n{\n    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation\n\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.\n                                                            // Transform the geometry's normals by the inverse transpose of the\n                                                            // model matrix. This is necessary to ensure the normals remain\n                                                            // perpendicular to the surface after the surface is transformed by\n                                                            // the model matrix.\n                                                            \n    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below\n    fs_Pos = vs_Pos;\n\n\n    fs_LightVec = u_LightPos - modelposition;  // Compute the direction in which the light source lies\n\n    gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is\n                                             // used to render the final positions of the geometry's vertices\n}\n"
 
 /***/ }),
 /* 72 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\n\n// This is a fragment shader. If you've opened this file first, please\n// open and read lambert.vert.glsl before reading on.\n// Unlike the vertex shader, the fragment shader actually does compute\n// the shading of geometry. For every pixel in your program's output\n// screen, the fragment shader is run for every bit of geometry that\n// particular pixel overlaps. By implicitly interpolating the position\n// data passed into the fragment shader by the vertex shader, the fragment shader\n// can compute what color to apply to its pixel based on things like vertex\n// position, light position, and vertex color.\nprecision highp float;\n\nuniform vec4 u_Color; // The color with which to render this instance of geometry.\nuniform int u_Shader;\nuniform vec4 u_CameraEye;\nuniform vec4 u_LightPos;\nuniform sampler2D u_Texture;\nuniform sampler2D u_SamplerTexture;\n\n// These are the interpolated values out of the rasterizer, so you can't know\n// their specific values without knowing the vertices that contributed to them\nin vec4 fs_Nor;\nin vec4 fs_LightVec;\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col; // This is the final output color that you will see on your\n                  // screen for the pixel that is currently being processed.\n\nint shiftleft(int x, int n) {\n    return int(float(x) * pow(2.0, float(n)));\n}\n\n// bitwise shift x to the right n spaces (bitwise >>)\n// x is int to shift\n// n is number of \"shifts\" or spaces to shift right\nint shiftright(int x, int n) {\n    return int(floor(float(x) / pow(2.0, float(n))));\n}\n\nvoid main() {\n    if(u_Shader == 0) {\n    // Material base color (before shading)\n        vec4 diffuseColor = u_Color;\n\n        // Calculate the diffuse term for Lambert shading\n        float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(u_LightPos.xyz));\n        // Avoid negative lighting values\n        diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);\n\n        float ambientTerm = 0.2;\n\n        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\n                                                            //to simulate ambient lighting. This ensures that faces that are not\n                                                            //lit by our point light are not completely black.\n\n        // Compute final shaded color\n        out_Col = vec4(diffuseColor.rgb * lightIntensity, 1.0);\n    //out_Col = vec4((normalize(fs_Nor.xyz) + vec3(1.)) * 0.5, 1.);\n    } else if(u_Shader == 1) { // one-dimensional texture shading\n        float nl = dot(vec3(fs_Nor), vec3(u_LightPos));\n        if(nl > 0.5) {\n            out_Col = vec4(1.45 * u_Color.xyz, 1.0);\n        } else if(nl > 0.0) {\n            out_Col = u_Color;\n        } else {\n            out_Col = vec4(0.35 * u_Color.xyz, 1.0);\n        }\n    } else if(u_Shader == 2) { // shininess-based highlights\n        vec3 n = normalize(fs_Nor.xyz);\n        vec3 v = normalize(u_CameraEye.xyz);\n        vec3 l = normalize(fs_LightVec.xyz);\n        vec3 r = l - 2.0 * dot(l, n) * n;\n        float s = 0.5;\n        float D = pow(abs(dot(v, r)), s);\n        float nl = dot(n, l);\n        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)).rgb, 1.0); // replace with texture sample\n\n    } else if(u_Shader == 3) {\n        mediump vec2 coord = vec2(gl_FragCoord.x / 512.0, 1.0 - (gl_FragCoord.y / 512.0));\n        mediump vec4 samp = texture(u_SamplerTexture, coord);\n        out_Col = vec4(samp.r, samp.g, samp.b, 1.0);\n    } else if(u_Shader == 4) {\n      out_Col = vec4(1.0);\n    } else { // normals (catches u_Shader == 5)\n        out_Col = vec4(abs(normalize(fs_Nor.xyz)), 1.0);\n    }\n}\n"
+module.exports = "#version 300 es\n\n// This is a fragment shader. If you've opened this file first, please\n// open and read lambert.vert.glsl before reading on.\n// Unlike the vertex shader, the fragment shader actually does compute\n// the shading of geometry. For every pixel in your program's output\n// screen, the fragment shader is run for every bit of geometry that\n// particular pixel overlaps. By implicitly interpolating the position\n// data passed into the fragment shader by the vertex shader, the fragment shader\n// can compute what color to apply to its pixel based on things like vertex\n// position, light position, and vertex color.\nprecision highp float;\n\nuniform vec4 u_Color; // The color with which to render this instance of geometry.\nuniform int u_Shader;\nuniform vec4 u_CameraEye;\nuniform vec4 u_LightPos;\nuniform sampler2D u_Texture;\nuniform sampler2D u_SamplerTexture;\nuniform float u_Shininess;\nuniform float u_R;\nuniform float u_ZMin;\nuniform int u_Shift;\n\n// These are the interpolated values out of the rasterizer, so you can't know\n// their specific values without knowing the vertices that contributed to them\nin vec4 fs_Nor;\nin vec4 fs_LightVec;\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col; // This is the final output color that you will see on your\n                  // screen for the pixel that is currently being processed.\n\nvoid main() {\n    vec3 n = normalize(fs_Nor.xyz);\n    vec3 l = normalize(u_LightPos.xyz);\n    float nl = dot(n, l);\n    vec3 v = normalize(u_CameraEye.xyz);\n    if(u_Shader == 0) {\n    // Material base color (before shading)\n        vec4 diffuseColor = u_Color;\n\n        // Calculate the diffuse term for Lambert shading\n        float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(u_LightPos.xyz));\n        // Avoid negative lighting values\n        diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);\n\n        float ambientTerm = 0.2;\n\n        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\n                                                            //to simulate ambient lighting. This ensures that faces that are not\n                                                            //lit by our point light are not completely black.\n        // Compute final shaded color\n        out_Col = vec4(diffuseColor.rgb * lightIntensity, 1.0);\n    } else if(u_Shader == 1) { // one-dimensional texture shading\n        float nl = dot(vec3(fs_Nor), vec3(u_LightPos));\n        if(nl > 0.5) {\n            out_Col = vec4(1.45 * u_Color.xyz, 1.0);\n        } else if(nl > 0.0) {\n            out_Col = u_Color;\n        } else {\n            out_Col = vec4(0.35 * u_Color.xyz, 1.0);\n        }\n    } else if(u_Shader == 2 || u_Shader == 3) { // shininess-based highlights\n        vec3 r = l - 2.0 * dot(l, n) * n;\n        float s = u_Shininess;\n        float D = pow(abs(dot(v, r)), s);\n        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)).rgb, 1.0); // replace with texture sample\n\n    } else if(u_Shader == 4) { // white silhouette\n        out_Col = vec4(1.0);\n    } else if(u_Shader == 7) { // detail mapping\n        float z = distance(u_CameraEye, fs_Pos);\n        float zmin = u_ZMin;\n        float r = u_R;\n        float zmax = r * zmin;\n        float D = 1.0 - (log(z / zmin) / log(zmax / zmin));\n        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)));\n    } else if(u_Shader == 8 || u_Shader == 9) { // near-silhouette\n        float r = u_R;\n        float D = pow(abs(dot(n, v)), r);\n        out_Col = vec4(texture(u_SamplerTexture, vec2(nl, D)));\n    } else if(u_Shader == 10) { // bit shifting\n        // lambertian shading\n        vec4 diffuseColor = u_Color;\n        float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(u_LightPos.xyz));\n        diffuseTerm = clamp(diffuseTerm, 0.f, 1.f);\n        float ambientTerm = 0.2;\n        float lightIntensity = diffuseTerm + ambientTerm;\n        vec4 lambert_color = vec4(diffuseColor.rgb * lightIntensity, 1.0);\n\n        // perform bit shifting\n        float factor = 255.0;\n        int shift_num = 240;\n        lambert_color.r = float(int(lambert_color.r * factor) & shift_num) / factor;\n        lambert_color.g = float(int(lambert_color.g * factor) & shift_num) / factor;\n        lambert_color.b = float(int(lambert_color.b * factor) & shift_num) / factor;\n        out_Col = lambert_color;\n    } else { // normals (catches u_Shader == 5 and 6)\n        out_Col = vec4(abs(normalize(fs_Nor.xyz)), 1.0);\n    }\n}\n"
 
 /***/ }),
 /* 73 */
