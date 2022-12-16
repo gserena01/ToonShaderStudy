@@ -36,6 +36,10 @@ class ShaderProgram {
   unifTexture: WebGLUniformLocation;
   unifTexture1: WebGLUniformLocation;
   unifWindowSize: WebGLUniformLocation;
+  unifShininess: WebGLUniformLocation;
+  unifZMin: WebGLUniformLocation;
+  unifR: WebGLUniformLocation;
+  unifShift: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -63,6 +67,10 @@ class ShaderProgram {
     this.unifTexture = gl.getUniformLocation(this.prog, "u_Texture");
     this.unifTexture1 = gl.getUniformLocation(this.prog, "u_Texture1");
     this.unifWindowSize = gl.getUniformLocation(this.prog, "u_WindowSize");
+    this.unifShininess = gl.getUniformLocation(this.prog, "u_Shininess");
+    this.unifZMin = gl.getUniformLocation(this.prog, "u_ZMin");
+    this.unifR = gl.getUniformLocation(this.prog, "u_R");
+    this.unifShift = gl.getUniformLocation(this.prog, "u_Shift");
   }
 
   use() {
@@ -132,6 +140,34 @@ class ShaderProgram {
     this.use();
     if (this.unifWindowSize !== -1) {
       gl.uniform2fv(this.unifWindowSize, dims);
+    }
+  }
+
+  setShininess(shininess: number) {
+    this.use();
+    if (this.unifShininess !== -1) {
+      gl.uniform1f(this.unifShininess, shininess);
+    }
+  }
+
+  setZMin(z_min: number) {
+    this.use();
+    if (this.unifZMin !== -1) {
+      gl.uniform1f(this.unifZMin, z_min);
+    }
+  }
+
+  setR(r: number) {
+    this.use();
+    if (this.unifR !== -1) {
+      gl.uniform1f(this.unifR, r);
+    }
+  }
+
+  setShift(num: number) {
+    this.use();
+    if (this.unifShift !== -1) {
+      gl.uniform1i(this.unifShift, num);
     }
   }
 

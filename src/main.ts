@@ -14,6 +14,11 @@ import FrameBuffer from "./rendering/gl/FrameBuffer";
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   shader: 0,
+  shininess: 0.5,
+  r: 2.5,
+  magnitude: 0.5,
+  z_min: 8.0,
+  shift_num: 2,
   mesh: 0,
   light_rotation: 0,
   "Reload Scene": loadScene, // A function pointer, essentially
@@ -22,22 +27,19 @@ var palette = {
   main_color: [255 * 0.42, 255 * 0.2, 255 * 0.14, 255],
 };
 
-let clearColor: vec4 = vec4.fromValues(.08, .03, .24, 1);
+let clearColor: vec4 = vec4.fromValues(0.08, 0.03, 0.24, 1);
 let lightPos: vec3 = vec3.fromValues(0, 0, 5);
 let lightPos4: vec4 = vec4.fromValues(0, 0, 5, 1);
 let prevLightAngle: number = 0;
 let prevColor: vec4 = vec4.fromValues(1.0, 0.0, 0.0, 0.0);
 let prevShader: number = -1;
 let prevMesh: number = 0;
-let suzanne: Mesh = new Mesh(readTextFile("resources/suzanne.obj"), vec3.fromValues(0, 0, 0));
-let tyra: Mesh = new Mesh(readTextFile("resources/tyra.obj"), vec3.fromValues(1, 1, 1));
+let suzanne: Mesh = new Mesh(
+  readTextFile("resources/suzanne.obj"),
+  vec3.fromValues(0, 0, 0)
+);
 let renderMesh: Mesh = suzanne;
 let screenQuad: ScreenQuad;
-
-const camera = new Camera(
-  vec3.fromValues(30, 10, 30),
-  vec3.fromValues(100, 0, 100)
-);
 
 function loadScene() {
   renderMesh.create();
@@ -61,19 +63,33 @@ function main() {
     normals: -1,
     lambert: 0,
     one_dimensional_toon: 1,
-    shininess_highlights: 2,
-    texture_test: 3,
+    shiny_spec_highlights1: 2,
+    shiny_spec_highlights2: 3,
+    detail_mapping: 7,
+    near_silhouette_1: 8,
+    near_silhouette_2: 9,
+    bit_shifting: 10,
     outlines: 4,
     mesh_lines: 5,
-    obra_dinn: 6
+    obra_dinn: 6,
   });
+  let color_folder = gui.addFolder("Color");
+  color_folder.addColor(palette, "main_color");
+  let shininess_folder = gui.addFolder("Shininess");
+  shininess_folder.add(controls, "shininess", 0, 1).step(.01);
+  let detail_folder = gui.addFolder("Detail Mapping");
+  detail_folder.add(controls, "r", 1.0, 10.0).step(0.01);
+  detail_folder.add(controls, "z_min", 0.0, 10.0).step(0.01);
+  let silhouette_folder = gui.addFolder("Near-Silhouette");
+  silhouette_folder.add(controls, "magnitude", 0, 5).step(0.01);
+  let shifting_folder = gui.addFolder("Bit-Shifting");
+  shifting_folder.add(controls, "shift_num", 0, 8).step(1);
   gui.add(controls, "mesh", {
     monkey: 0,
     t_rex: 1,
     armadillo: 2,
-    bunny: 3
+    bunny: 3,
   });
-  gui.addColor(palette, "main_color");
   gui.add(controls, "light_rotation", 0, 360).step(1);
   gui.add(controls, "Reload Scene");
 
@@ -104,7 +120,12 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+  renderer.setClearColor(
+    clearColor[0],
+    clearColor[1],
+    clearColor[2],
+    clearColor[3]
+  );
   gl.enable(gl.DEPTH_TEST);
   // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   const lambert = new ShaderProgram([
@@ -122,25 +143,6 @@ function main() {
 
   postShader.setWindowSize(vec2.fromValues(texWidth, texHeight));
 
-  if (true) {
-  // THIS STUFF WAS NOT TRANSFERRED YET
-  const img = new Image();
-  img.onload = function () {
-    gl.activeTexture(gl.TEXTURE2);
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
-    gl.generateMipmap(gl.TEXTURE_2D);
-
-    const texLoc = gl.getUniformLocation(lambert.prog, "u_SamplerTexture");
-    gl.uniform1i(texLoc, 2);
-
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4); // draw over the entire viewport
-  };
-  img.src = img.src = '/resources/texture1.png';
-// ALL OF THAT STUFF ^^^^
-  }
-
   // This function will be called every frame
   function tick() {
     camera.update();
@@ -152,16 +154,86 @@ function main() {
       prevShader = controls.shader;
     }
 
+    if (controls.shader == 2 || controls.shader == 3 || controls.shader == 7 || controls.shader == 8 || controls.shader == 9) {
+      const img = new Image();
+      img.onload = function () {
+        gl.activeTexture(gl.TEXTURE2);
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+        gl.generateMipmap(gl.TEXTURE_2D);
+
+        const texLoc = gl.getUniformLocation(lambert.prog, "u_SamplerTexture");
+        gl.uniform1i(texLoc, 2);
+
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4); // draw over the entire viewport
+      };
+      if (controls.shader == 2) {
+        img.src = "/resources/texture2.png";
+        shininess_folder.open();
+        detail_folder.close();
+        silhouette_folder.close()
+        lambert.setShininess(controls.shininess);
+      } else if (controls.shader == 3) {
+        img.src = "/resources/texture3.png";
+        shininess_folder.open();
+        detail_folder.close();
+        silhouette_folder.close()
+        lambert.setShininess(controls.shininess);
+      } else if (controls.shader == 7) {
+        img.src = "/resources/texture4.png";
+        lambert.setR(controls.r);
+        lambert.setZMin(controls.z_min);
+        detail_folder.open();
+        shininess_folder.close();
+        silhouette_folder.close()
+      } else if (controls.shader == 8) {
+        img.src = "/resources/texture5.png";
+        detail_folder.close();
+        shininess_folder.close();
+        silhouette_folder.open();
+        lambert.setR(controls.magnitude);
+      } else if (controls.shader == 9) {
+        img.src = "/resources/texture6.png";
+        detail_folder.close();
+        shininess_folder.close();
+        silhouette_folder.open();
+        lambert.setR(controls.magnitude);
+      }
+    } else {
+      shininess_folder.close();
+      detail_folder.close();
+      silhouette_folder.close()
+    }
+
+    if (controls.shader == 0 || controls.shader == 1) {
+      color_folder.open();
+    } else {
+      color_folder.close();
+    }
+
     if (controls.mesh != prevMesh) {
       prevMesh = controls.mesh;
       if (controls.mesh == 0) {
-        renderMesh = new Mesh(readTextFile("resources/suzanne.obj"), vec3.fromValues(0, 0, 0));
+        renderMesh = new Mesh(
+          readTextFile("resources/suzanne.obj"),
+          vec3.fromValues(0, 0, 0)
+        );
       } else if (controls.mesh == 1) {
-        renderMesh = new Mesh(readTextFile("resources/tyra.obj"), vec3.fromValues(0, 0, 0));
+        renderMesh = new Mesh(
+          readTextFile("resources/tyra.obj"),
+          vec3.fromValues(0, 0, 0)
+        );
       } else if (controls.mesh == 2) {
-        renderMesh = new Mesh(readTextFile("resources/armadillo.obj"), vec3.fromValues(0, 0, 0));
+        renderMesh = new Mesh(
+          readTextFile("resources/armadillo.obj"),
+          vec3.fromValues(0, 0, 0)
+        );
       } else if (controls.mesh == 3) {
-        renderMesh = new Mesh(readTextFile("resources/bunny.obj"), vec3.fromValues(0, 0, 0));
+        renderMesh = new Mesh(
+          readTextFile("resources/bunny.obj"),
+          vec3.fromValues(0, 0, 0)
+        );
       }
       loadScene();
     }
@@ -234,15 +306,22 @@ function main() {
       frameBuffer.bindToTextureSlot(1);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       postShader.setTexture1(1); // accepts the int ID of the tex slot you want the unif to bind to
-      renderer.render(camera, postShader, controls.shader, currColor, lightPos4, [screenQuad]);
+      renderer.render(
+        camera,
+        postShader,
+        controls.shader,
+        currColor,
+        lightPos4,
+        [screenQuad]
+      );
     } else {
       // render without post-processing effects
-            // render without post-processing effects
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.enable(gl.DEPTH_TEST);
-            renderer.render(camera, lambert, controls.shader, currColor, lightPos4, [
-              renderMesh,
-            ]);
+      // render without post-processing effects
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.enable(gl.DEPTH_TEST);
+      renderer.render(camera, lambert, controls.shader, currColor, lightPos4, [
+        renderMesh,
+      ]);
     }
 
     stats.end();
@@ -265,7 +344,9 @@ function main() {
       );
       frameBuffer.destroy();
       frameBuffer.create();
-      postShader.setWindowSize(vec2.fromValues(window.innerWidth, window.innerHeight));
+      postShader.setWindowSize(
+        vec2.fromValues(window.innerWidth, window.innerHeight)
+      );
     },
     false
   );

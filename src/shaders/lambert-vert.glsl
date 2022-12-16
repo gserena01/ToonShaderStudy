@@ -37,7 +37,6 @@ const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, whi
 
 void main()
 {
-    fs_Pos = vs_Pos;
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
 
     mat3 invTranspose = mat3(u_ModelInvTr);
@@ -48,6 +47,8 @@ void main()
                                                             // the model matrix.
                                                             
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
+    fs_Pos = vs_Pos;
+
 
     fs_LightVec = u_LightPos - modelposition;  // Compute the direction in which the light source lies
 
