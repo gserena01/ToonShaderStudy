@@ -1,7 +1,7 @@
 # Toon Shader Experimentation
 
 ## Serena Gandhi (serenagandhi1@gmail.com)
-## Link: 
+## Link: https://gserena01.github.io/ToonShaderStudy/ (may not work well on some devices :(   )
 
 # Sample Images:
 
