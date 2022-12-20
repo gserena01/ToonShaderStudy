@@ -45,6 +45,13 @@ This shader acheives this affect by determining how the light interacts with the
 
 This shader samples from a texture using the dot product of the surface normal and the light direction, the interaction between the camera and the light, as well as a shininess factor. Together, this produces a toonstyle shader that interacts intensely with changes in lighting.
 
+## Detail Mapping
+
+![image](https://user-images.githubusercontent.com/60444726/208588607-68ddcae5-de20-4471-a685-7b3f8ef012ee.png)
+
+![texture4](https://user-images.githubusercontent.com/60444726/208588629-e2e5edfb-ce3d-4feb-b084-790f660be8c5.png)
+
+This shader provides levels of abstraction based on the distance from the camera eye. Polygons further away from the mesh are shaded in a more solid, dark gray-ish color, while features closer to camera are rendered with more detail. This is acheived by sampling from a texture using depth as a parameter.
 
 # External Resources:
 
