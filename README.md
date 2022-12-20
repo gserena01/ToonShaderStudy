@@ -11,6 +11,27 @@ If the link is not working, please download the source code. Using npm, run "npm
 
 There are a variety of shaders included within this project. The below sections discuss the implementation and results of each one.
 
+## Lambertian Shading:
+
+![image](https://user-images.githubusercontent.com/60444726/208586734-1dcae63c-bf68-4b2e-b583-e3a3e1438c74.png)
+
+This appears on the landing page of the program, primarily as a point of comparison to other shaders included in the program.
+
+## Normals:
+
+![image](https://user-images.githubusercontent.com/60444726/208586840-d3d249a8-96f7-4cc0-a736-6c92128dada2.png)
+
+This shader simply renders out the normals of the mesh as a visualization for the viewer.
+
+## One-Dimensional Toon Shading
+
+![image](https://user-images.githubusercontent.com/60444726/208587054-1a6b03bf-6e55-49b7-abdb-360843d7d923.png)
+
+![image](https://user-images.githubusercontent.com/60444726/208587127-d863915d-7ffc-480a-ac5e-46533d84c2d0.png)
+
+Now things are getting interesting! One-Dimensional Toon Shading is the most primitive toon shading technique. It produces promising results that are visible on both lo- and hi-poly mesh. 
+
+This shader acheives this affect by determining how the light interacts with the surface normal. If the dot product of the light direction and the surface normal reaches certain threshold values, the shade used to color the mesh changes accordingly.
 
 # Reference Images:
 
