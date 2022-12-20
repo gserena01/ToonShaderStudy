@@ -53,6 +53,18 @@ This shader samples from a texture using the dot product of the surface normal a
 
 This shader provides levels of abstraction based on the distance from the camera eye. Polygons further away from the mesh are shaded in a more solid, dark gray-ish color, while features closer to camera are rendered with more detail. This is acheived by sampling from a texture using depth as a parameter.
 
+## Bit Deletion
+
+![image](https://user-images.githubusercontent.com/60444726/208588992-f73f16bf-1fb2-496c-a09c-a956992541cf.png)
+
+### Before
+
+![image](https://user-images.githubusercontent.com/60444726/208588926-57d4b2c2-cef8-45b9-9271-25c9fea92db5.png)
+
+### After
+
+This surprisingly simple, original technique simply removes bits from the color data before rendering. The number of bits removed can be adjusted by the user. The removal of bits from the color data provides levels of abstraction based on the number of bits removed and can produce a range of stylized results.
+
 # External Resources:
 
 Barla, P., Thollot, J., and Markosian, L. 2006. X8Toon: An Extended Toon Shader. In International
