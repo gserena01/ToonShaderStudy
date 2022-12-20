@@ -48,5 +48,5 @@ This shader samples from a texture using the dot product of the surface normal a
 
 # External Resources:
 
-Barla,%P.,%Thollot,%J.,%and%Markosian,%L.%2006.%X8Toon:%An%Extended%Toon%Shader.%In%International
-Symposium%on%Non8Photorealistic%Animation%and%Rendering.
+Barla, P., Thollot, J., and Markosian, L. 2006. X8Toon: An Extended Toon Shader. In International
+Symposium on Non8Photorealistic Animation and Rendering.
