@@ -5,7 +5,7 @@ This project currently contains my explorations in toon shading! I have implemen
 
 # To Run:
 
-If the link is not working, please download the source code. Using npm, run "npm install", then "npm start". Go to localhost:2023 in your browser, and play around with a variety of shaders, models, and lighting scenarios!
+If the link is not working, please download the source code. Using npm, run "npm install", then "npm start". Go to [localhost:2023](http://localhost:2023/) in your browser, and play around with a variety of shaders, models, and lighting scenarios!
 
 # Shaders Implemented:
 
