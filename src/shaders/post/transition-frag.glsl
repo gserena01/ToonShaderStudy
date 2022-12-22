@@ -37,7 +37,7 @@ void main() {
     if(diffuseTerm > 0.0) {
       out_Col = vec4(vec3(1.0) - out_Col.rgb, 1.0);
     }
-  } else if(u_Shader == 11) {
+  } else if(u_Shader == 11) { // cluster-dot
     // to find corresponding mask index
     int i = int(fs_UV.x * u_WindowSize.x);
     int j = int(fs_UV.y * u_WindowSize.y);
@@ -59,9 +59,6 @@ void main() {
     } else {
       out_Col.b = 0.0;
     }
-
     out_Col.a = 1.0;
-
   }
-  // out_Col = vec4(1.0, 1.0, .0, 1.0);
 }
