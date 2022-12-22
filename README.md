@@ -7,6 +7,16 @@ This project currently contains my explorations in toon shading! I have implemen
 
 If the link is not working, please download the source code. Using npm, run "npm install", then "npm start". Go to [localhost:2023](http://localhost:2023/) in your browser, and play around with a variety of shaders, models, and lighting scenarios!
 
+# Introduction
+
+Toon shading is a relatively longtime technique that has recently been getting more attention as stylization become more popular in the animated movie industry (primarily after the release of _Into the Spiderverse_. 
+
+![spider_man_into_the_spider_verse_dom_SpiderVerse_trlb795 1015_DH_v2 0](https://user-images.githubusercontent.com/60444726/209175305-197138f2-6baa-48ef-8836-96e2a3ad208d.jpg)
+
+Toon shading takes many forms and can be implemented in both primitive and complex ways. More complex techniques consider lighting scenarios, camera angles, depth, and a variety of levels of abstraction in ways that simpler techniques fail to do so.
+
+In this project, I explore a variety of toon shading techniques from existing research (and from my own ideas), with the intent of developing my own toon shader tool that can provide artists with the flexibility and agency to produce excellent toon-shaded renders.
+
 # Shaders Implemented:
 
 There are a variety of shaders included within this project. The below sections discuss the implementation and results of each one.
