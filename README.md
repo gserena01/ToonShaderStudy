@@ -95,6 +95,12 @@ This shader is only pertinent to low-poly meshes (high poly meshes will render a
 
 This is a dithering technique performed in a post-processing pass. It retains a comic book-like feel, while still providing levels of abstraction. This shader was implemented by applying a mask to a lambertian render. For each color channel (rgb), if the pixel's corresponding location in the mask has a lesser value than the pixel's value within a certain color channel, the pixel's color channel will be maxed out. Otherwise, the pixel's color channel value will be 0. This means that the colors displayed in the image are very limited, much as they would be for a primitive mass-printing establishment.
 
+## Looking Forward...
+
+In the next few months, I would like to complete the Obra Dinn shader with blue noise dithering (sampled from a texture) and proper lighting interactions.
+
+I would also like to make moves to implement my own shader and artist's tool. Currently, I am envisioning a depth-based bit removal shader that could be specifically used for heavy stylization or environments. This shader would remove additional bits from pixels that are further away from the camera. In considering this shader, I have to consider how far apart increments of bit removal are, and if they occur at constant or exponential distances from one another. I also have to consider if these levels of abstraction are situation-specific.
+
 # External Resources:
 
 Barla, P., Thollot, J., and Markosian, L. 2006. X8Toon: An Extended Toon Shader. In International
