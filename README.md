@@ -5,7 +5,17 @@ This project currently contains my explorations in toon shading! I have implemen
 
 # To Run:
 
-If the link is not working, please download the source code. Using npm, run "npm install", then "npm start". Go to localhost:2023 in your browser, and play around with a variety of shaders, models, and lighting scenarios!
+If the link is not working, please download the source code. Using npm, run "npm install", then "npm start". Go to [localhost:2023](http://localhost:2023/) in your browser, and play around with a variety of shaders, models, and lighting scenarios!
+
+# Introduction
+
+Toon shading is a relatively longtime technique that has recently been getting more attention as stylization become more popular in the animated movie industry (primarily after the release of _Into the Spiderverse_. 
+
+![spider_man_into_the_spider_verse_dom_SpiderVerse_trlb795 1015_DH_v2 0](https://user-images.githubusercontent.com/60444726/209175305-197138f2-6baa-48ef-8836-96e2a3ad208d.jpg)
+
+Toon shading takes many forms and can be implemented in both primitive and complex ways. More complex techniques consider lighting scenarios, camera angles, depth, and a variety of levels of abstraction in ways that simpler techniques fail to do so.
+
+In this project, I explore a variety of toon shading techniques from existing research (and from my own ideas), with the intent of developing my own toon shader tool that can provide artists with the flexibility and agency to produce excellent toon-shaded renders.
 
 # Shaders Implemented:
 
@@ -64,6 +74,42 @@ This shader provides levels of abstraction based on the distance from the camera
 ### After
 
 This surprisingly simple, original technique simply removes bits from the color data before rendering. The number of bits removed can be adjusted by the user. The removal of bits from the color data provides levels of abstraction based on the number of bits removed and can produce a range of stylized results.
+
+## Near-Silhouette
+
+![image](https://user-images.githubusercontent.com/60444726/209168863-d0939b06-81c0-48b4-82aa-0c5ddb065946.png)
+
+![texture5](https://user-images.githubusercontent.com/60444726/209168899-7947e7e9-1805-4e2c-89a4-d4c260d58cc1.png)
+
+![image](https://user-images.githubusercontent.com/60444726/209168966-0bc8a69b-0f94-43cb-860d-fa52b4c22204.png)
+
+![texture6](https://user-images.githubusercontent.com/60444726/209168977-17eda46a-1ad9-4e97-89e1-c2ca4765a88c.png)
+
+This shader accounts for the magnitude at which light hits the surface, as well as the direction in which the camera is facing to create a backlighting or near-silhouette stylized toon look.
+
+## Outlines
+
+![image](https://user-images.githubusercontent.com/60444726/209169730-570a5815-0c37-4ada-8b00-7dd3de69001b.png)
+
+This shader is primarily for future use (to be coupled with other shaders as an outline), and was produced by rendering an all-white silhouette of the mesh before shading only the edges of the silhouette in the post-processing pass.
+
+## Mesh Lines (Wireframe)
+
+![image](https://user-images.githubusercontent.com/60444726/209170129-97b1be69-55e1-423d-abaf-4698c6aa9cae.png)
+ 
+This shader is only pertinent to low-poly meshes (high poly meshes will render as entirely white). This shader was created by shading the normals during a first rendering pass, and shading where changes in normals are present in a post-processing pass.
+
+## Cluster Dot (Dithering)
+
+![image](https://user-images.githubusercontent.com/60444726/209170736-598307a4-e050-4533-80e0-172873b0f2bf.png)
+
+This is a dithering technique performed in a post-processing pass. It retains a comic book-like feel, while still providing levels of abstraction. This shader was implemented by applying a mask to a lambertian render. For each color channel (rgb), if the pixel's corresponding location in the mask has a lesser value than the pixel's value within a certain color channel, the pixel's color channel will be maxed out. Otherwise, the pixel's color channel value will be 0. This means that the colors displayed in the image are very limited, much as they would be for a primitive mass-printing establishment.
+
+## Looking Forward...
+
+In the next few months, I would like to complete the Obra Dinn shader with blue noise dithering (sampled from a texture) and proper lighting interactions.
+
+I would also like to make moves to implement my own shader and artist's tool. Currently, I am envisioning a depth-based bit removal shader that could be specifically used for heavy stylization or environments. This shader would remove additional bits from pixels that are further away from the camera. In considering this shader, I have to consider how far apart increments of bit removal are, and if they occur at constant or exponential distances from one another. I also have to consider if these levels of abstraction are situation-specific.
 
 # External Resources:
 
